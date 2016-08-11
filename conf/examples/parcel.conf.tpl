@@ -1,0 +1,2 @@
+trustedanalytics.atk.metastore.connection-postgresql.url = "jdbc:postgresql://"${trustedanalytics.atk.metastore.connection-postgresql.host}":"${trustedanalytics.atk.metastore.connection-postgresql.port}"/"${trustedanalytics.atk.metastore.connection-postgresql.database}
+trustedanalytics.atk.metastore.connection = ${trustedanalytics.atk.metastore.connection-postgresql}
