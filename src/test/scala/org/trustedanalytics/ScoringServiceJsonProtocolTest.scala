@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.trustedanalytics.domain
+package org.trustedanalytics
 
 import org.trustedanalytics.scoring.ScoringServiceJsonProtocol
 import org.scalatest.{ Matchers, WordSpec }
