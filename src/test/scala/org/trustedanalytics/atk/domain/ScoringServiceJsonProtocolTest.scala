@@ -16,7 +16,6 @@
 
 package org.trustedanalytics.domain
 
-import org.trustedanalytics.atk.domain.DomainJsonProtocol._
 import org.trustedanalytics.scoring.ScoringServiceJsonProtocol
 import org.scalatest.{ Matchers, WordSpec }
 import spray.json._
