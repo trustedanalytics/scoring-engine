@@ -71,6 +71,7 @@ class ScoringServiceApplication extends EventLogging {
    */
   def start() = {
       val model = getModel
+      println("Successfully obtained model ")
       val service = new ScoringService(model)
       createActorSystemAndBindToHttp(service)
       println("Successfully bound to HTTP ")
@@ -108,7 +109,7 @@ class ScoringServiceApplication extends EventLogging {
         hdfsFileSystem.copyToLocalFile(false, new Path(tarFilePath), new Path(tempTarFile.getAbsolutePath))
         tarFilePath = tempTarFile.getAbsolutePath
       }
-      println("calling ModelArchiveFormat to read the model")
+      println("calling ModelArchiveFormat to get the models")
       //ModelArchiveFormat.read(new File(tarFilePath), this.getClass.getClassLoader.getParent)
       println(s"File path is $tarFilePath")
       ModelArchiveFormat.read(new File(tarFilePath), this.getClass.getClassLoader)

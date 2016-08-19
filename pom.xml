@@ -250,6 +250,11 @@
             <artifactId>hadoop-utils</artifactId>
             <version>0.6.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.jvnet.mimepull</groupId>
+            <artifactId>mimepull</artifactId>
+            <version>1.9.4</version>
+        </dependency>
 
         <dependency>
             <groupId>log4j</groupId>

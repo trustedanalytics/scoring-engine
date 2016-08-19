@@ -132,11 +132,7 @@ class ScoringService(model: Model) extends Directives {
       path("v2" / metadataPrefix) {
         requestUri { uri =>
           get {
-            println("about to call model.metadata")
             import spray.json._
-            println("printing model")
-            println(model)
-
             onComplete(Future { model.modelMetadata() }) {
               case Success(metadata) => complete(JsObject("model_details" -> metadata.toJson,
                 "input" -> new JsArray(model.input.map(input => FieldFormat.write(input)).toList),
