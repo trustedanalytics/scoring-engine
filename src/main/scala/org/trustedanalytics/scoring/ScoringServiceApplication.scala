@@ -52,7 +52,6 @@ import org.trustedanalytics.model.archive.format.ModelArchiveFormat
  *
  * See the 'scoring_server.sh' to see how the launcher starts the application.
  */
-//class ScoringServiceApplication extends Component with EventLogging with ClassLoaderAware {
 class ScoringServiceApplication extends EventLogging {
 
   val config = ConfigFactory.load(this.getClass.getClassLoader)
@@ -83,15 +82,18 @@ class ScoringServiceApplication extends EventLogging {
   def stop(): Unit = {
   }
 
-//  private def getModel: Model = withMyClassLoader {
+  /**
+   * load the model saved at the given path
+   * @return Model running inside the scoring engine instance
+   */
   private def getModel: Model = {
-    var tempTarFile: File = null
+    var tempMarFile: File = null
     try {
-      var tarFilePath = config.getString("trustedanalytics.scoring-engine.archive-tar")
-      if (tarFilePath.startsWith("hdfs:/")) {
-        if (!tarFilePath.startsWith("hdfs://")) {
-          val relativePath = tarFilePath.substring(tarFilePath.indexOf("hdfs:") + 6)
-          tarFilePath = "hdfs://" + relativePath
+      var marFilePath = config.getString("trustedanalytics.scoring-engine.archive-tar")
+      if (marFilePath.startsWith("hdfs:/")) {
+        if (!marFilePath.startsWith("hdfs://")) {
+          val relativePath = marFilePath.substring(marFilePath.indexOf("hdfs:") + 6)
+          marFilePath = "hdfs://" + relativePath
         }
 
         val hdfsFileSystem = try {
@@ -103,19 +105,17 @@ class ScoringServiceApplication extends EventLogging {
           case t: Throwable =>
             t.printStackTrace()
             info("Failed to create HDFS instance using hadoop-library. Default to FileSystem")
-            org.apache.hadoop.fs.FileSystem.get(new URI(tarFilePath), new Configuration())
+            org.apache.hadoop.fs.FileSystem.get(new URI(marFilePath), new Configuration())
         }
-        tempTarFile = File.createTempFile("modelTar", ".mar")
-        hdfsFileSystem.copyToLocalFile(false, new Path(tarFilePath), new Path(tempTarFile.getAbsolutePath))
-        tarFilePath = tempTarFile.getAbsolutePath
+        tempMarFile = File.createTempFile("model", ".mar")
+        hdfsFileSystem.copyToLocalFile(false, new Path(marFilePath), new Path(tempMarFile.getAbsolutePath))
+        marFilePath = tempMarFile.getAbsolutePath
       }
-      println("calling ModelArchiveFormat to get the models")
-      //ModelArchiveFormat.read(new File(tarFilePath), this.getClass.getClassLoader.getParent)
-      println(s"File path is $tarFilePath")
-      ModelArchiveFormat.read(new File(tarFilePath), this.getClass.getClassLoader)
+      println("calling ModelArchiveFormat to get the model")
+      ModelArchiveFormat.read(new File(marFilePath), this.getClass.getClassLoader)
     }
     finally {
-      FileUtils.deleteQuietly(tempTarFile)
+      FileUtils.deleteQuietly(tempMarFile)
     }
   }
 
