@@ -208,33 +208,37 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
-
     </build>
 
     <dependencies>
+        <!--<dependency>-->
+            <!--<groupId>org.trustedanalytics.atk</groupId>-->
+            <!--<artifactId>interfaces</artifactId>-->
+            <!--<version>master-SNAPSHOT</version>-->
+        <!--</dependency>-->
+        <!--log4j-->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.7.5</version>
+        </dependency>
 
-        <dependency>
-            <groupId>org.trustedanalytics.atk</groupId>
-            <artifactId>module-loader</artifactId>
-            <version>master-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.trustedanalytics.atk</groupId>
-            <artifactId>interfaces</artifactId>
-            <version>master-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.trustedanalytics.atk</groupId>
-            <artifactId>event</artifactId>
-            <version>${event.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.trustedanalytics.atk</groupId>
-            <artifactId>event-api</artifactId>
-            <version>${event.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.trustedanalytics</groupId>
             <artifactId>model-archive-format</artifactId>
