@@ -100,6 +100,7 @@ class ScoringServiceApplication {
         marFilePath = tempMarFile.getAbsolutePath
       }
       logger.info("calling ModelArchiveFormat to get the model")
+      sys.addShutdownHook(FileUtils.deleteQuietly(tempMarFile)) // Delete temporary directory on exit
       ModelArchiveFormat.read(new File(marFilePath), this.getClass.getClassLoader, None)
     }
     finally {
