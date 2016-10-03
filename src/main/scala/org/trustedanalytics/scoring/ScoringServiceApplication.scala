@@ -22,16 +22,14 @@ import akka.actor.{ ActorSystem, Props }
 import akka.io.IO
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, Path }
-//import org.trustedanalytics.atk.moduleloader.{ ClassLoaderAware, Component }
 import org.trustedanalytics.hadoop.config.client.oauth.TapOauthToken
 import spray.can.Http
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
-import org.trustedanalytics.atk.event.EventLogging
 import com.typesafe.config.{ Config, ConfigFactory }
 import scala.reflect.ClassTag
-import org.trustedanalytics.scoring.interfaces.{ ModelLoader, Model }
+import org.trustedanalytics.scoring.interfaces.Model
 import org.trustedanalytics.hadoop.config.client.helper.Hdfs
 import java.net.URI
 import org.apache.commons.io.FileUtils
@@ -46,34 +44,24 @@ import org.apache.http.client.entity.UrlEncodedFormEntity
 import java.util.{ ArrayList => JArrayList }
 import spray.json._
 import org.trustedanalytics.model.archive.format.ModelArchiveFormat
+import org.slf4j.LoggerFactory
 
 /**
  * Scoring Service Application - a REST application used by client layer to communicate with the Model.
  *
  * See the 'scoring_server.sh' to see how the launcher starts the application.
  */
-class ScoringServiceApplication extends EventLogging {
-
+class ScoringServiceApplication {
+  private val logger = LoggerFactory.getLogger(this.getClass)
   val config = ConfigFactory.load(this.getClass.getClassLoader)
-
-  EventLogging.raw = true
-  info("Scoring server setting log adapter from configuration")
-
-  EventLogging.raw = config.getBoolean("trustedanalytics.atk.scoring.logging.raw")
-  info("Scoring server set log adapter from configuration")
-
-  EventLogging.profiling = config.getBoolean("trustedanalytics.atk.scoring.logging.profile")
-  info(s"Scoring server profiling: ${EventLogging.profiling}")
 
   /**
    * Main entry point to start the Scoring Service Application
    */
   def start() = {
       val model = getModel
-      println("Successfully obtained model ")
       val service = new ScoringService(model)
       createActorSystemAndBindToHttp(service)
-      println("Successfully bound to HTTP ")
   }
 
   /**
@@ -89,7 +77,7 @@ class ScoringServiceApplication extends EventLogging {
   private def getModel: Model = {
     var tempMarFile: File = null
     try {
-      var marFilePath = config.getString("trustedanalytics.scoring-engine.archive-tar")
+      var marFilePath = config.getString("trustedanalytics.scoring-engine.archive-mar")
       if (marFilePath.startsWith("hdfs:/")) {
         if (!marFilePath.startsWith("hdfs://")) {
           val relativePath = marFilePath.substring(marFilePath.indexOf("hdfs:") + 6)
@@ -98,21 +86,22 @@ class ScoringServiceApplication extends EventLogging {
 
         val hdfsFileSystem = try {
           val token = new TapOauthToken(getJwtToken())
-          println(s"Successfully retreived a token for user ${token.getUserName}")
+          logger.info(s"Successfully retreived a token for user ${token.getUserName}")
           Hdfs.newInstance().createFileSystem(token)
         }
         catch {
           case t: Throwable =>
             t.printStackTrace()
-            info("Failed to create HDFS instance using hadoop-library. Default to FileSystem")
+            logger.info("Failed to create HDFS instance using hadoop-library. Default to FileSystem")
             org.apache.hadoop.fs.FileSystem.get(new URI(marFilePath), new Configuration())
         }
         tempMarFile = File.createTempFile("model", ".mar")
         hdfsFileSystem.copyToLocalFile(false, new Path(marFilePath), new Path(tempMarFile.getAbsolutePath))
         marFilePath = tempMarFile.getAbsolutePath
       }
-      println("calling ModelArchiveFormat to get the model")
-      ModelArchiveFormat.read(new File(marFilePath), this.getClass.getClassLoader)
+      logger.info("calling ModelArchiveFormat to get the model")
+      sys.addShutdownHook(FileUtils.deleteQuietly(tempMarFile)) // Delete temporary directory on exit
+      ModelArchiveFormat.read(new File(marFilePath), this.getClass.getClassLoader, None)
     }
     finally {
       FileUtils.deleteQuietly(tempMarFile)
@@ -129,12 +118,11 @@ class ScoringServiceApplication extends EventLogging {
     val service = system.actorOf(Props(new ScoringServiceActor(scoringService)), "scoring-service")
     // Bind the Spray Actor to an HTTP Port
     // start a new HTTP server with our service actor as the handler
-    println("binding now")
     IO(Http) ? Http.Bind(service, interface = config.getString("trustedanalytics.scoring.host"), port = config.getInt("trustedanalytics.scoring.port"))
-    println("scoring server is running now")
+    logger.info("Scoring server is running now")
   }
 
-  def getJwtToken(): String = withContext("httpsGetQuery") {
+  def getJwtToken(): String = {
 
     val query = s"http://${System.getenv("UAA_URI")}/oauth/token"
     val headers = List(("Accept", "application/json"))
@@ -172,7 +160,7 @@ class ScoringServiceApplication extends EventLogging {
         response = Some(httpClient.execute(request))
         val inputStream = response.get.getEntity().getContent
         val result = scala.io.Source.fromInputStream(inputStream).getLines().mkString("\n")
-        println(s"Response From UAA Server is $result")
+        logger.info(s"Response From UAA Server is $result")
         result.parseJson.asJsObject().getFields("access_token") match {
           case values => values(0).asInstanceOf[JsString].value
         }
@@ -191,7 +179,7 @@ class ScoringServiceApplication extends EventLogging {
     finally {
       httpClient.close()
     }
-  }(null)
+  }
 
 }
 

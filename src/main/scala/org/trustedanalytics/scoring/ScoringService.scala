@@ -25,7 +25,6 @@ import akka.event.Logging
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import org.trustedanalytics.atk.spray.json.AtkDefaultJsonProtocol
 import scala.util.{ Failure, Success }
 import org.trustedanalytics.scoring.interfaces.Model
 import spray.json._
@@ -75,8 +74,6 @@ class ScoringService(model: Model) extends Directives {
       versions = List("v1", "v2"))
   }
 
-  import AtkDefaultJsonProtocol._
-  implicit val descFormat = jsonFormat3(ServiceDescription)
   val jsonFormat = new ScoringServiceJsonProtocol(model)
   import jsonFormat._
 

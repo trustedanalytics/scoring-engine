@@ -13,15 +13,13 @@
     </description>
 
     <properties>
-        <dep.cdh.version>cdh5.5.0</dep.cdh.version>
-        <dep.spark.version>1.5.0-${dep.cdh.version}</dep.spark.version>
-        <scala.long.version>2.10.4</scala.long.version>
+        <dep.cdh.version>cdh5.7.1</dep.cdh.version>
+        <scala.long.version>2.10.5</scala.long.version>
         <scala.short.version>2.10</scala.short.version>
         <event.version>0.4.2</event.version>
         <commons-lang3.version>3.3.2</commons-lang3.version>
         <dep.hadoop2.version>2.6.0-${dep.cdh.version}</dep.hadoop2.version>
         <akka.version>2.3.11</akka.version>
-        <event.version>0.4.2</event.version>
         <scalatest.version>2.1.6</scalatest.version>
     </properties>
 
@@ -36,6 +34,27 @@
             <releases>
                 <enabled>true</enabled>
             </releases>
+        </repository>
+        <repository>
+            <id>tap</id>
+            <url>https://tap.jfrog.io/tap/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>tap-snapshots</id>
+            <url>https://tap.jfrog.io/tap/public-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>daily</updatePolicy>
+            </snapshots>
         </repository>
         <repository>
             <id>cloudera cdh</id>
@@ -166,22 +185,6 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.trustedanalytics</groupId>
-                <artifactId>atk-maven-plugin</artifactId>
-                <version>1.0-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <goals>
-                            <goal>generate-conf</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-
-
             <!--END DO NOT TOUCH-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -208,32 +211,30 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
-
     </build>
 
     <dependencies>
-
+        <!--log4j-->
         <dependency>
-            <groupId>org.trustedanalytics.atk</groupId>
-            <artifactId>module-loader</artifactId>
-            <version>master-SNAPSHOT</version>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
         </dependency>
         <dependency>
-            <groupId>org.trustedanalytics.atk</groupId>
-            <artifactId>interfaces</artifactId>
-            <version>master-SNAPSHOT</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.10</version>
         </dependency>
         <dependency>
-            <groupId>org.trustedanalytics.atk</groupId>
-            <artifactId>event</artifactId>
-            <version>${event.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.10</version>
         </dependency>
         <dependency>
-            <groupId>org.trustedanalytics.atk</groupId>
-            <artifactId>event-api</artifactId>
-            <version>${event.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.7.5</version>
         </dependency>
         <dependency>
             <groupId>org.trustedanalytics</groupId>
@@ -254,13 +255,18 @@
             <groupId>org.trustedanalytics</groupId>
             <artifactId>hadoop-utils</artifactId>
             <version>0.6.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jvnet.mimepull</groupId>
             <artifactId>mimepull</artifactId>
             <version>1.9.4</version>
         </dependency>
-
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -282,6 +288,62 @@
             <artifactId>jcl-over-slf4j</artifactId>
             <version>1.7.5</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId>
+            <version>1.6.0-cdh5.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-network-shuffle_2.10</artifactId>
+            <version>1.6.0-cdh5.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-network-common_2.10</artifactId>
+            <version>1.6.0-cdh5.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.0.29.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>3.6.6.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-remote_2.10</artifactId>
+            <version>2.3.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-unsafe_2.10</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-core_2.10</artifactId>
+            <version>3.2.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-ast_2.10</artifactId>
+            <version>3.2.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-jackson_2.10</artifactId>
+            <version>3.2.10</version>
+        </dependency>
+
 
 
 
@@ -363,11 +425,6 @@
             <artifactId>scala-library</artifactId>
             <version>${scala.long.version}</version>
         </dependency>
-<!--        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-jwt</artifactId>
-            <version>1.0.3.RELEASE</version>
-        </dependency>-->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
@@ -393,11 +450,27 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${dep.hadoop2.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.thoughtworks.paranamer</groupId>
+                    <artifactId>paranamer</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <version>${dep.hadoop2.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-all</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
