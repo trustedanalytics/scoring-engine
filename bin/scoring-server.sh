@@ -21,7 +21,7 @@ DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 export MAVEN_REPO=~/.m2/repository
 #CP=$DIR/../target/lib/module-loader-master-SNAPSHOT.jar:$DIR/../target/lib/*:$DIR/../target/scoring-engine-1.0-SNAPSHOT.jar:$DIR/../conf/:/etc/hadoop/conf:$MAVEN_REPO/org/scala-lang/scala-library/2.10.5/scala-library-2.10.5.jar:$MAVEN_REPO/com/typesafe/config/1.2.1/config-1.2.1.jar:$MAVEN_REPO/org/scala-lang/scala-reflect/2.10.5/scala-reflect-2.10.5.jar:$MAVEN_REPO/org/trustedanalytics/h2o-models-adapter/1.0-SNAPSHOT
-CP=$DIR/../target/lib/*:$DIR/../target/scoring-engine-1.0-SNAPSHOT.jar:/etc/hadoop/conf:$MAVEN_REPO/org/scala-lang/scala-library/2.10.5/scala-library-2.10.5.jar:$MAVEN_REPO/com/typesafe/config/1.2.1/config-1.2.1.jar:$DIR/../conf/
+CP=$DIR/../target/lib/*:$DIR/../target/scoring-engine-1.0-SNAPSHOT.jar:/etc/hadoop/conf:$MAVEN_REPO/org/scala-lang/scala-library/2.10.5/scala-library-2.10.5.jar:$MAVEN_REPO/org/scala-lang/scala-reflect/2.10.5/scala-reflect-2.10.5.jar:$MAVEN_REPO/com/typesafe/config/1.2.1/config-1.2.1.jar:$DIR/../conf/:$MAVEN_REPO/org/trustedanalytics/h2o-models-adapter/1.0-SNAPSHOT
 #export SEARCH_PATH="-Datk.module-loader.search-path=target/lib:target:scoring-interfaces/target:${HOME}/.m2/"
 #export SEARCH_PATH="-Datk.module-loader.search-path=target/lib:target:scoring-interfaces/target:${HOME}/.m2/repository/org/trustedanalytics/h2o-models-adapter/1.0-SNAPSHOT"
 pushd $DIR/..
