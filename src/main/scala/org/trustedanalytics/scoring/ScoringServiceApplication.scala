@@ -111,14 +111,22 @@ class ScoringServiceApplication {
    * We need an ActorSystem to host our application in and to bind it to an HTTP port
    */
   private def createActorSystemAndBindToHttp(scoringService: ScoringService): Unit = {
-    // create the system
-    implicit val system = ActorSystem("trustedanalytics-scoring")
-    implicit val timeout = Timeout(5.seconds)
-    val service = system.actorOf(Props(new ScoringServiceActor(scoringService)), "scoring-service")
-    // Bind the Spray Actor to an HTTP Port
-    // start a new HTTP server with our service actor as the handler
-    IO(Http) ? Http.Bind(service, interface = config.getString("trustedanalytics.scoring.host"), port = config.getInt("trustedanalytics.scoring.port"))
-    logger.info("Scoring server is running now")
+    try {
+      // create the system
+      implicit val system = ActorSystem("trustedanalytcs-scoring")
+      implicit val timeout = Timeout(7.seconds)
+      println("created actor system")
+      val service = system.actorOf(Props(new ScoringServiceActor(scoringService)), "scoring-service")
+      println("service created")
+      // Bind the Spray Actor to an HTTP Port
+      // start a new HTTP server with our service actor as the handler
+      IO(Http) ? Http.Bind(service, interface = config.getString("trustedanalytics.scoring.host"), port = config.getInt("trustedanalytics.scoring.port"))
+      logger.info("Scoring server is running now")
+    }
+    catch{
+      case t: Throwable =>
+        t.printStackTrace()
+      }
   }
 
   def getJwtToken(): String = {
