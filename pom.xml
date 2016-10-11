@@ -9,19 +9,12 @@
         <version>0.1.2</version>
     </parent>
 
-    <artifactId>model-service</artifactId>
+    <artifactId>model-scoring</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
-        <!--<dep.cdh.version>cdh5.7.1</dep.cdh.version>
-        <scala.long.version>2.10.5</scala.long.version>
-        <scala.short.version>2.10</scala.short.version>
-        <event.version>0.4.2</event.version>
-        <commons-lang3.version>3.3.2</commons-lang3.version>
-        <dep.hadoop2.version>2.6.0-${dep.cdh.version}</dep.hadoop2.version>-->
         <akka.version>2.2.3-shaded-protobuf</akka.version>
-        <!--<scalatest.version>2.1.6</scalatest.version>-->
         <akka.group>org.spark-project.akka</akka.group>
         <spray.version>1.2.3</spray.version>
         <fasterxml>2.4.4</fasterxml>
@@ -263,6 +256,22 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.trustedanalytics</groupId>
+            <artifactId>model-archive-format</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.trustedanalytics</groupId>
+            <artifactId>model-archive-interfaces</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+            <version>${tap.typesafe-config.version}</version>
+        </dependency>
+
         <!--log4j-->
         <dependency>
             <groupId>log4j</groupId>
@@ -290,16 +299,6 @@
             <version>1.7.5</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.trustedanalytics</groupId>
-            <artifactId>model-archive-format</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.trustedanalytics</groupId>
-            <artifactId>scoring-interfaces</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
