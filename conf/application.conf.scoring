@@ -5,9 +5,7 @@ trustedanalytics.scoring-engine {
   archive-tar = "hdfs://SOME_PATH/SOME_TAR"
 }
 
-
-trustedanalytics.atk {
-  scoring {
+trustedanalytics.scoring {
     identifier = "ia"
     host = "127.0.0.1"
     port = 9100
@@ -18,7 +16,6 @@ trustedanalytics.atk {
       raw = false
       profile = false
     }
-  }
 }
 
 

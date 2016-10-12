@@ -5,9 +5,8 @@ trustedanalytics.scoring-engine {
   archive-tar = ${uri}
 }
 
-
-trustedanalytics.atk {
-  scoring {
+#-Dtrustedanalytics.scoring.port="SOME_PORT"
+trustedanalytics.scoring {
     identifier = "ia"
     #bind address - change to 0.0.0.0 to listen on all interfaces
     host = "0.0.0.0"
@@ -19,7 +18,6 @@ trustedanalytics.atk {
       raw = false
       profile = false
     }
-  }
 }
 
 
