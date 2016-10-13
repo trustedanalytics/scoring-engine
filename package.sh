@@ -16,6 +16,8 @@ pushd target
 
     cp ../bin/model-scoring.sh $MODULE/bin/
     cp ../conf/application.conf.cf $MODULE/conf/application.conf
+    cp ../manifest.yml.tpl $MODULE/manifest.yml
+
 
     zip  -r $MODULE.zip $MODULE
 
