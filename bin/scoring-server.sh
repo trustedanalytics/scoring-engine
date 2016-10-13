@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright (c) 2015 Intel Corporation 
+#  Copyright (c) 2016 Intel Corporation 
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -18,12 +18,6 @@
 #set -o errexit
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 
-
-export MAVEN_REPO=~/.m2/repository
-#CP=$DIR/../target/lib/module-loader-master-SNAPSHOT.jar:$DIR/../target/lib/*:$DIR/../target/scoring-engine-1.0-SNAPSHOT.jar:$DIR/../conf/:/etc/hadoop/conf:$MAVEN_REPO/org/scala-lang/scala-library/2.10.5/scala-library-2.10.5.jar:$MAVEN_REPO/com/typesafe/config/1.2.1/config-1.2.1.jar:$MAVEN_REPO/org/scala-lang/scala-reflect/2.10.5/scala-reflect-2.10.5.jar:$MAVEN_REPO/org/trustedanalytics/h2o-models-adapter/1.0-SNAPSHOT
-CP=$DIR/../target/lib/*:$DIR/../target/scoring-engine-1.0-SNAPSHOT.jar:/etc/hadoop/conf:$MAVEN_REPO/org/scala-lang/scala-library/2.10.5/scala-library-2.10.5.jar:$MAVEN_REPO/org/scala-lang/scala-reflect/2.10.5/scala-reflect-2.10.5.jar:$MAVEN_REPO/com/typesafe/config/1.2.1/config-1.2.1.jar:$DIR/../conf/:$MAVEN_REPO/org/trustedanalytics/h2o-models-adapter/1.0-SNAPSHOT
-#export SEARCH_PATH="-Datk.module-loader.search-path=target/lib:target:scoring-interfaces/target:${HOME}/.m2/"
-#export SEARCH_PATH="-Datk.module-loader.search-path=target/lib:target:scoring-interfaces/target:${HOME}/.m2/repository/org/trustedanalytics/h2o-models-adapter/1.0-SNAPSHOT"
 pushd $DIR/..
 pwd
 
@@ -35,11 +29,21 @@ export HOSTNAME=`hostname`
 export MODEL_TMP_DIR=`mktemp -d -t tap-scoring-modelXXXXXXXXXXXXXXXXXX`
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MODEL_TMP_DIR
 
+MODEL_SCORING_MAIN="org.trustedanalytics.scoring.MyMainFunction"
+
+
+MODEL_SCORING_JAR=$(find `pwd` -name model-scoring-1.0-SNAPSHOT.jar)
+echo $MODEL_SCORING_JAR
+
+if [ -z $CP ]; then
+    CP=$DIR/../target/model-scoring-1.0-SNAPSHOT.jar:$DIR/../target/lib/*:/etc/hadoop/conf
+fi
+
 # NOTE: Add this parameter to Java for connecting to a debugger
 # -agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005
 
 #CMD=`echo java $@ -Dconfig.trace=loads -XX:MaxPermSize=384m $SEARCH_PATH -Dscoring-engine.tmpdir="$MODEL_TMP_DIR" -cp "$CP" org.trustedanalytics.atk.moduleloader.Module scoring-engine org.trustedanalytics.scoring.ScoringServiceApplication`
-CMD=`echo java $@ -Dconfig.trace=loads -XX:MaxPermSize=384m $SEARCH_PATH -Dscoring-engine.tmpdir="$MODEL_TMP_DIR" -cp "$CP" org.trustedanalytics.scoring.MyMainFunction`
+CMD=`echo java $@  -Dscoring-engine.tmpdir="$MODEL_TMP_DIR" -cp "$CP" $MODEL_SCORING_MAIN`
 echo $CMD
 $CMD
 
