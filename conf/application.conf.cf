@@ -2,13 +2,15 @@
 #The mar file path can be provided on the command line with a java property
 #-Dtrustedanalytics.scoring-engine.archive-mar="SOME_PATH"
 trustedanalytics.scoring-engine {
-  archive-mar = "hdfs://SOME_PATH/SOME_TAR"
+  archive-mar = ${uri}
 }
 
+#-Dtrustedanalytics.scoring.port="SOME_PORT"
 trustedanalytics.scoring {
     identifier = "ia"
-    host = "127.0.0.1"
-    port = 9100
+    #bind address - change to 0.0.0.0 to listen on all interfaces
+    host = "0.0.0.0"
+    port = ${PORT}
     default-count = 20
     default-timeout = 30s
     request-timeout = 29s
