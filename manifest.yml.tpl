@@ -1,6 +1,6 @@
 ---
 applications:
-- name: scoring-engine
+- name: scoring-engine-spark-tk
   command: bin/model-scoring.sh
   memory: 1G
   disk_quota: 1G
