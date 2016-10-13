@@ -19,7 +19,7 @@ package org.trustedanalytics
 import org.trustedanalytics.scoring.ScoringServiceJsonProtocol
 import org.scalatest.{ Matchers, WordSpec }
 import spray.json._
-import org.trustedanalytics.scoring.interfaces.{ ModelMetaDataArgs, Field, Model }
+import org.trustedanalytics.scoring.interfaces.{ ModelMetaData, Field, Model }
 
 import scala.collection.immutable.Map
 
@@ -29,8 +29,8 @@ class ScoringServiceJsonProtocolTest extends WordSpec with Matchers {
       Array(Field("col1", "Double"), Field("col2", "Double"), Field("col3", "double"))
     }
 
-    override def modelMetadata(): ModelMetaDataArgs = {
-      new ModelMetaDataArgs("Dummy Model", "Dummy Class", "Dummy Reader", Map("Created_On" -> "Jan 29th 2016"))
+    override def modelMetadata(): ModelMetaData = {
+      new ModelMetaData("Dummy Model", "Dummy Class", "Dummy Reader", Map("Created_On" -> "Jan 29th 2016"))
     }
 
     override def output(): Array[Field] = {

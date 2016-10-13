@@ -21,14 +21,14 @@ import spray.json.DefaultJsonProtocol._
 import spray.json._
 import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
-import org.trustedanalytics.scoring.interfaces.{ Model, Field, ModelMetaDataArgs }
+import org.trustedanalytics.scoring.interfaces.{ Model, Field, ModelMetaData }
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
 class ScoringServiceJsonProtocol(model: Model) {
 
-  implicit object ModelMetaDataFormat extends JsonFormat[ModelMetaDataArgs] {
-    override def write(obj: ModelMetaDataArgs): JsValue = {
+  implicit object ModelMetaDataFormat extends JsonFormat[ModelMetaData] {
+    override def write(obj: ModelMetaData): JsValue = {
       JsObject(
         "model_type" -> JsString(obj.modelType),
         "model_class" -> JsString(obj.modelClass),
@@ -36,7 +36,7 @@ class ScoringServiceJsonProtocol(model: Model) {
         "custom_values" -> obj.customMetaData.toJson)
     }
 
-    override def read(json: JsValue): ModelMetaDataArgs = ???
+    override def read(json: JsValue): ModelMetaData = ???
   }
 
   implicit object FieldFormat extends JsonFormat[Field] {
