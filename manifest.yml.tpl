@@ -1,7 +1,8 @@
 ---
 applications:
 - name: scoring-engine-spark-tk
-  command: bin/model-scoring.sh
+  command: bin/cf.sh
+  buildpack: tap-java-buildpack
   memory: 1G
   disk_quota: 1G
   timeout: 180

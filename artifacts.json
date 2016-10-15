@@ -1,0 +1,9 @@
+{
+	"cloudfoundry": {
+		"label": "Model scoring server package for cloud foundry."
+	},
+	"java": {
+		"label": "Standard model scoring server package."
+	}
+}
+
