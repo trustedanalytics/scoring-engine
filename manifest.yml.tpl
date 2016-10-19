@@ -8,7 +8,7 @@ applications:
   timeout: 180
   instances: 1
   services:
-    - hdfs-for-se
+    - hdfs-instance-bare
     - kerberos-for-atk
   env:
     VERSION: "20161018"
