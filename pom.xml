@@ -237,7 +237,7 @@
                 <version>1.3.2</version>
                 <executions>
                     <execution>
-                        <id>package-core</id>
+                        <id>package-cf</id>
                         <phase>package</phase>
                         <goals>
                             <goal>exec</goal>
@@ -246,7 +246,21 @@
                             <executable>bash</executable>
                             <workingDirectory>${basedir}</workingDirectory>
                             <arguments>
-                                <argument>package.sh</argument>
+                                <argument>package_cf.sh</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>package-java</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bash</executable>
+                            <workingDirectory>${basedir}</workingDirectory>
+                            <arguments>
+                                <argument>package_java.sh</argument>
                             </arguments>
                         </configuration>
                     </execution>

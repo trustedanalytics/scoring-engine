@@ -5,6 +5,7 @@ trustedanalytics.scoring-engine {
   archive-mar = "hdfs://SOME_PATH/SOME_TAR"
 }
 
+#-Dtrustedanalytics.scoring.port="SOME_PORT"
 trustedanalytics.scoring {
     identifier = "ia"
     host = "127.0.0.1"

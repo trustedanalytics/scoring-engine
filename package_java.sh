@@ -16,7 +16,7 @@
 #
 
 
-MODULE=model-scoring-$VERSION.$POST_TAG$BUILD_NUMBER
+MODULE=model-scoring-java-$VERSION.$POST_TAG$BUILD_NUMBER
 
 
 pushd target
@@ -33,8 +33,7 @@ pushd target
     cp ../bin/model-scoring.sh $MODULE/bin/
     cp ../jq $MODULE/
     cp ../bin/cf.sh $MODULE/bin/
-    cp ../conf/application.conf.cf $MODULE/conf/application.conf
-    cp ../manifest.yml.tpl $MODULE/manifest.yml
+    cp ../conf/application.conf.scoring $MODULE/conf/application.conf
 
 
     zip  -r $MODULE.zip $MODULE
