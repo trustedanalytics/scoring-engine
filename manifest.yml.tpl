@@ -11,4 +11,4 @@ applications:
     - hdfs-for-se
     - kerberos-for-atk
   env:
-    VERSION: "20161014"
+    VERSION: "20161018"

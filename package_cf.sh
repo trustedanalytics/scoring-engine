@@ -35,7 +35,9 @@ pushd target
     cp ../conf/application.conf.cf $MODULE/conf/application.conf
     cp ../manifest.yml.tpl $MODULE/manifest.yml
 
-    zip  -r $MODULE.zip $MODULE
+    pushd $MODULE/
+    zip  -r ../$MODULE.zip .
+    popd
 
 popd
 
