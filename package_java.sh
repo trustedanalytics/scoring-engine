@@ -31,8 +31,6 @@ pushd target
     cp model-scoring*.jar $MODULE/
 
     cp ../bin/model-scoring.sh $MODULE/bin/
-    cp ../jq $MODULE/
-    cp ../bin/cf.sh $MODULE/bin/
     cp ../conf/application.conf.scoring $MODULE/conf/application.conf
 
 
