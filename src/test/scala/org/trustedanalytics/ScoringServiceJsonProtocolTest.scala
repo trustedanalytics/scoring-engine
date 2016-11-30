@@ -39,7 +39,7 @@ class ScoringServiceJsonProtocolTest extends WordSpec with Matchers {
     override def score(row: Array[Any]): Array[Any] = ???
   }
 
-  val jsonFormat = new ScoringServiceJsonProtocol(model)
+  val jsonFormat = new ScoringServiceJsonProtocol()
 
   import jsonFormat.DataInputFormat
   import jsonFormat.DataOutputFormat
