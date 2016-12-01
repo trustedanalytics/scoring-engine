@@ -16,8 +16,6 @@
 package org.trustedanalytics.scoring
 
 import java.io.File
-import java.nio.file.{Path, Files}
-
 import akka.actor.{Props,Actor}
 import org.apache.commons.io.FileUtils
 import org.trustedanalytics.model.archive.format.ModelArchiveFormat
@@ -161,71 +159,18 @@ class ScoringService(model: Model) extends Directives {
       path("upload") {
         post {
           var ret: Option[Route] = None
-
           entity(as [MultipartFormData]){ formData =>
             val file = formData.get("file")
             for(fileBodypart : BodyPart <- file) {
               val fileEntity: HttpEntity = fileBodypart.entity
-              val result = saveAttachment("model.mar", fileEntity.data.toByteArray)
-              scoringModel = ModelArchiveFormat.read(new File("model.mar"), this.getClass.getClassLoader, None)
-              ret = Some(complete("File was successfully uploaded"))
+              scoringModel = getModel(fileEntity.data.toByteArray)
+              ret = Some(complete("File was successfully uploaded and model created"))
             }
-            ret.getOrElse( complete(StatusCodes.InternalServerError, ""))
-
+            ret.getOrElse( complete(StatusCodes.InternalServerError, "Unable to create the model. Please check the validity of MAR file"))
           }
         }
       }
   }
-
-
-
-
-
-    //        requestUri { uri =>
-    //          post {
-    //            entity(as[String]) { args => val modelBytes = args.parseJson.asJsObject.getFields("mar-bytes")(0)
-    //              println(modelBytes)
-    //              onComplete(Future { getModel(ModelInputFormat.read(modelBytes))}) {
-    //                case Success(m) => complete{scoringModel = m
-    //                  HttpResponse(StatusCode.int2StatusCode(200))}
-    //                case Failure(ex) => ctx => {
-    //                  ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
-    //                }
-    //              }
-    //            }
-    //          }
-    //        }
-
-
-  def saveAttachment(fileName: String, content: Array[Byte]): Boolean = {
-    println("1 save called")
-    saveAttachment[Array[Byte]](fileName, content, {(is, os) => os.write(is)})
-    true
-  }
-
-  def saveAttachment(fileName: String, content: InputStream): Boolean = {
-    println("2 save called")
-    saveAttachment[InputStream](fileName, content,
-    { (is, os) =>
-      val buffer = new Array[Byte](16384)
-      Iterator
-        .continually (is.read(buffer))
-        .takeWhile (-1 !=)
-        .foreach (read=>os.write(buffer,0,read))
-    }
-    )
-  }
-    def saveAttachment[T](fileName: String, content: T, writeFile: (T, OutputStream) => Unit): Boolean = {
-      println("3 save called")
-      try {
-        val fos = new java.io.FileOutputStream(fileName)
-        writeFile(content, fos)
-        fos.close()
-        true
-      } catch {
-        case _ => false
-      }
-    }
 
   def scoreStringRequest(records: Seq[Array[Any]]): Array[Any] = {
     records.map(row => {
