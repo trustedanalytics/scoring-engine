@@ -186,7 +186,7 @@
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
                     <filereports>WDF TestSuite.txt</filereports>
-                    <parallel>false</parallel>
+                    <parallel>true</parallel>
                     <stdout>FTD</stdout>
                     <argLine>-Xmx512m -XX:PermSize=256m</argLine>
                 </configuration>

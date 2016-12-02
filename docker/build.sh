@@ -15,9 +15,13 @@
 #  limitations under the License.
 #
 
-MODEL_SCORING_PACKAGE=$(find `pwd`/../ -name "model-scoring-java-*.zip" )
 
-echo PATH `pwd`/../target
+MODEL_SCORING_PACKAGE=$(find `pwd`/../ -name "model-scoring-java-*.zip" -type f )
+
+echo PATH `pwd`/../
+
+echo $MODEL_SCORING_PACKAGE
+
 if [ "$MODEL_SCORING_PACKAGE" == "" ]; then
     echo "couldn't find model scoring java package"
     exit 1

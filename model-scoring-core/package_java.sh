@@ -15,6 +15,8 @@
 #  limitations under the License.
 #
 
+set -e
+
 VERSION="${VERSION:-0.7.4}"
 POST_TAG="${POST_TAG:-dev}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
