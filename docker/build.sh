@@ -15,11 +15,17 @@
 #  limitations under the License.
 #
 
-MODEL_SCORING_PACKAGE=$(find `pwd`/../target -name "model-scoring-java-*.zip" )
+MODEL_SCORING_PACKAGE=$(find `pwd`/../ -name "model-scoring-java-*.zip" )
+
+echo PATH `pwd`/../target
+if [ "$MODEL_SCORING_PACKAGE" == "" ]; then
+    echo "couldn't find model scoring java package"
+    exit 1
+fi
 
 echo MODEL_SCORING_PACKAGE $MODEL_SCORING_PACKAGE
 
-unzip  $MODEL_SCORING_PACKAGE -d `pwd`
+unzip -o $MODEL_SCORING_PACKAGE -d `pwd`
 
 NAME="`basename $MODEL_SCORING_PACKAGE`"
 
