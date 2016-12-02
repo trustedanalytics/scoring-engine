@@ -124,18 +124,6 @@ class ScoringServiceJsonProtocol() {
     override def read(json: JsValue): Array[Map[String, Any]] = ???
   }
 
-  implicit object ModelInputFormat extends JsonFormat[Array[Byte]] {
-    //don't need this method. just there to satisfy the API.
-    override def write(obj: Array[Byte]): JsValue = ???
-
-    override def read(json: JsValue): Array[Byte] = {
-      json match {
-        case JsString(s) => s.getBytes
-      }
-    }
-  }
-
-
   def decodeRecords(records: List[JsValue]): Seq[Array[Any]] = {
     val decodedRecords: Seq[Map[String, Any]] = records.map { record =>
       record match {
@@ -150,8 +138,8 @@ class ScoringServiceJsonProtocol() {
       var counter = 0
       decodedRecord.foreach({
         case (name, value) => {
-          counter = counter + 1
           featureArray(counter) = value
+          counter = counter + 1
         }
       })
       features = features :+ featureArray

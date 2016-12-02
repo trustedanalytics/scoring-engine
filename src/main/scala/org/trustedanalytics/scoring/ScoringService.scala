@@ -19,20 +19,17 @@ import java.io.File
 import akka.actor.{Props,Actor}
 import org.apache.commons.io.FileUtils
 import org.trustedanalytics.model.archive.format.ModelArchiveFormat
-import spray.json.JsValue
 import spray.routing._
 import spray.http._
-import spray.http.MediaTypes._
 import spray.http.BodyPart
 import MediaTypes._
 import akka.event.Logging
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.util.{ Failure, Success }
 import org.trustedanalytics.scoring.interfaces.Model
 import spray.json._
-import java.io.{ByteArrayInputStream, InputStream, OutputStream}
+
 
 /**
  * We don't implement our route structure directly in the service actor because
@@ -146,8 +143,8 @@ class ScoringService(model: Model) extends Directives {
               scoringModel.modelMetadata()
             }) {
               case Success(metadata) => complete(JsObject("model_details" -> metadata.toJson,
-                "input" -> new JsArray(scoringModel.input.map(input => FieldFormat.write(input)).toList),
-                "output" -> new JsArray(scoringModel.output.map(output => FieldFormat.write(output)).toList)).toString)
+                "input" -> new JsArray(scoringModel.input().map(input => FieldFormat.write(input)).toList),
+                "output" -> new JsArray(scoringModel.output().map(output => FieldFormat.write(output)).toList)).toString())
               case Failure(ex) => ctx => {
                 ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
 
@@ -156,17 +153,34 @@ class ScoringService(model: Model) extends Directives {
           }
         }
       } ~
-      path("upload") {
+      path("uploadMarFile") {
         post {
           var ret: Option[Route] = None
-          entity(as [MultipartFormData]){ formData =>
+          entity(as[MultipartFormData]) { formData =>
             val file = formData.get("file")
-            for(fileBodypart : BodyPart <- file) {
+            for (fileBodypart: BodyPart <- file) {
               val fileEntity: HttpEntity = fileBodypart.entity
               scoringModel = getModel(fileEntity.data.toByteArray)
               ret = Some(complete("File was successfully uploaded and model created"))
             }
-            ret.getOrElse( complete(StatusCodes.InternalServerError, "Unable to create the model. Please check the validity of MAR file"))
+            ret.getOrElse(complete(StatusCodes.InternalServerError, "Unable to create the model. Please check the validity of MAR file"))
+          }
+        }
+      } ~
+      path("uploadMarBytes") {
+        requestUri { uri =>
+          post {
+            entity(as[Array[Byte]]) { params =>
+              onComplete(Future { getModel(params) }) {
+                case Success(m) => complete {
+                  scoringModel = m
+                  HttpResponse(StatusCode.int2StatusCode(200))
+                }
+                case Failure(ex) => ctx => {
+                  ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
+                }
+              }
+            }
           }
         }
       }
