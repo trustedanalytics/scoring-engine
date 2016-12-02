@@ -19,7 +19,7 @@ MODEL_SCORING_PACKAGE=$(find `pwd`/../target -name "model-scoring-java-*.zip" )
 
 echo MODEL_SCORING_PACKAGE $MODEL_SCORING_PACKAGE
 
-unzip -o $MODEL_SCORING_PACKAGE -d `pwd`
+unzip  $MODEL_SCORING_PACKAGE -d `pwd`
 
 NAME="`basename $MODEL_SCORING_PACKAGE`"
 
