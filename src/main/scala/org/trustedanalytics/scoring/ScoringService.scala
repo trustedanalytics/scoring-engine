@@ -160,26 +160,32 @@ class ScoringService(model: Model) extends Directives {
             val file = formData.get("file")
             for (fileBodypart: BodyPart <- file) {
               val fileEntity: HttpEntity = fileBodypart.entity
-              scoringModel = getModel(fileEntity.data.toByteArray)
-              ret = Some(complete("File was successfully uploaded and model created"))
+              val status = installModel(fileEntity.data.toByteArray)
+              if(status == "OK") {
+                ret = Some(complete("File was successfully uploaded and model created. \n"))
+              }
+              else {
+                ret = Some (complete("Model already installed in SE. App does not allow uploading another model. \n"))
+              }
             }
-            ret.getOrElse(complete(StatusCodes.InternalServerError, "Unable to create the model. Please check the validity of MAR file"))
+            ret.getOrElse(complete(StatusCodes.InternalServerError, "Unable to create the model"))
           }
         }
       } ~
       path("uploadMarBytes") {
         requestUri { uri =>
           post {
+            var ret: Option[Route] = None
             entity(as[Array[Byte]]) { params =>
-              onComplete(Future { getModel(params) }) {
-                case Success(m) => complete {
-                  scoringModel = m
-                  HttpResponse(StatusCode.int2StatusCode(200))
-                }
-                case Failure(ex) => ctx => {
-                  ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
-                }
+              val status = installModel(params)
+              if (status == "OK") {
+                ret = Some(complete("Model Bytes were successfully uploaded and model created. \n"))
               }
+              else {
+                ret = Some(complete("Model already installed in SE. App does not allow uploading another model. \n"))
+              }
+
+              ret.getOrElse(complete(StatusCodes.InternalServerError, "Unable to create the model"))
             }
           }
         }
@@ -212,15 +218,21 @@ class ScoringService(model: Model) extends Directives {
    * Store the MAR file locally and load the model saved at the given path
    * @return Model running inside the scoring engine instance
    */
-  private def getModel(modelBytes: Array[Byte]): Model = {
-    var tempMarFile: File = null
-    try{
-      tempMarFile = File.createTempFile("model", ".mar")
-      FileUtils.writeByteArrayToFile(tempMarFile, modelBytes)
-      ModelArchiveFormat.read(tempMarFile, this.getClass.getClassLoader, None)
+  private def installModel(modelBytes: Array[Byte]): String = {
+    if (scoringModel == null) {
+      var tempMarFile: File = null
+      try {
+        tempMarFile = File.createTempFile("model", ".mar")
+        FileUtils.writeByteArrayToFile(tempMarFile, modelBytes)
+        scoringModel = ModelArchiveFormat.read(tempMarFile, this.getClass.getClassLoader, None)
+        "OK"
+      }
+      finally {
+        sys.addShutdownHook(FileUtils.deleteQuietly(tempMarFile)) // Delete temporary File on exit
+      }
     }
-    finally {
-      sys.addShutdownHook(FileUtils.deleteQuietly(tempMarFile)) // Delete temporary File on exit
+    else{
+      "Fail"
     }
   }
 }
