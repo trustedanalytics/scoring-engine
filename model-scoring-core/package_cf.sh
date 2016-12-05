@@ -15,8 +15,13 @@
 #  limitations under the License.
 #
 
+set -e
 
-MODULE=model-scoring-java-$VERSION.$POST_TAG$BUILD_NUMBER
+VERSION="${VERSION:-0.7.4}"
+POST_TAG="${POST_TAG:-dev}"
+BUILD_NUMBER="${BUILD_NUMBER:-1}"
+
+MODULE=model-scoring-cf-$VERSION.$POST_TAG$BUILD_NUMBER
 
 
 pushd target
@@ -30,11 +35,14 @@ pushd target
 
     cp model-scoring*.jar $MODULE/
 
-    cp ../bin/model-scoring.sh $MODULE/bin/
-    cp ../conf/application.conf.scoring $MODULE/conf/application.conf
+    cp ../jq $MODULE/
+    cp ../bin/cf.sh $MODULE/bin/
+    cp ../conf/application.conf.cf $MODULE/conf/application.conf
+    cp ../manifest.yml.tpl $MODULE/manifest.yml
 
-
-    zip  -r $MODULE.zip $MODULE
+    pushd $MODULE/
+    zip  -r ../$MODULE.zip .
+    popd
 
 popd
 
