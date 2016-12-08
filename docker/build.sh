@@ -81,11 +81,11 @@ do
     DOCKERCONT=$MARNAME-$BUILD_NUMBER
     docker kill $DOCKERCONT
     docker rm $DOCKERCONT
-    docker run -it -d -p 9100:9100 --name=$DOCKERCONT scoring-engine-5
+    docker run -it -d -p 9100:9100 --name=$DOCKERCONT scoring-engine-$BUILD_NUMBER
     MAX=20
     code=$(curl -s -o /dev/null  localhost:9100 -w "%{http_code}")
     count=$((0))
-    while [ $code -ne 200 ] || [ $count -gt $MAX ];
+    while [ $code -ne 200 ] && [ $count -gt $MAX ];
     do
         echo $code
         code=$(curl -s -o /dev/null  localhost:9100 -w "%{http_code}")
