@@ -85,7 +85,7 @@ do
     MAX=20
     code=$(curl -s -o /dev/null  localhost:9100 -w "%{http_code}")
     count=$((0))
-    while [ $code -ne 200 ] && [ $count -gt $MAX ];
+    while [ $code -ne 200 ] && [ $count -lt $MAX ];
     do
         echo $code
         code=$(curl -s -o /dev/null  localhost:9100 -w "%{http_code}")
