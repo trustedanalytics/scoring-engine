@@ -38,7 +38,7 @@
                                 <configuration>
                                     <executable>bash</executable>
                                     <arguments>
-                                        <argument> build.sh</argument>
+                                        <argument>build.sh</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
