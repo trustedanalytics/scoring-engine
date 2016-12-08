@@ -130,7 +130,9 @@
                 <version>1.3.2</version>
              </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>default-compile</id>
@@ -258,11 +260,9 @@
         </pluginManagement>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
+                <version>3.6.0</version>
             </plugin>
             <plugin>
                 <groupId>com.mycila</groupId>
