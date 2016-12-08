@@ -216,7 +216,7 @@ class ScoringService(model: Model) extends Directives {
 
   /**
    * Store the MAR file locally and load the model saved at the given path
-   * @return Model running inside the scoring engine instance
+   * @return String indicating if the model was successfully uploaded ('OK') OR model upload was not attempted since SE already contained a model ('Fail')
    */
   private def installModel(modelBytes: Array[Byte]): String = {
     if (scoringModel == null) {
