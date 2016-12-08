@@ -15,18 +15,21 @@
  */
 package org.trustedanalytics.scoring
 
-import akka.actor.Actor
-import spray.json.JsValue
+import java.io.File
+import akka.actor.{Props,Actor}
+import org.apache.commons.io.FileUtils
+import org.trustedanalytics.model.archive.format.ModelArchiveFormat
 import spray.routing._
 import spray.http._
+import spray.http.BodyPart
 import MediaTypes._
 import akka.event.Logging
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import scala.util.{ Failure, Success }
 import org.trustedanalytics.scoring.interfaces.Model
 import spray.json._
+
 
 /**
  * We don't implement our route structure directly in the service actor because
@@ -55,6 +58,8 @@ class ScoringServiceActor(val scoringService: ScoringService) extends Actor with
  * Defines our service behavior independently from the service actor
  */
 class ScoringService(model: Model) extends Directives {
+  var scoringModel = model
+
   def homepage = {
     respondWithMediaType(`text/html`) {
       complete {
@@ -73,7 +78,7 @@ class ScoringService(model: Model) extends Directives {
       versions = List("v1", "v2"))
   }
 
-  val jsonFormat = new ScoringServiceJsonProtocol(model)
+  val jsonFormat = new ScoringServiceJsonProtocol()
   import jsonFormat._
 
   import spray.json._
@@ -96,7 +101,9 @@ class ScoringService(model: Model) extends Directives {
               scoreArgs =>
                 val json: JsValue = scoreArgs.parseJson
                 import jsonFormat.DataOutputFormat
-                onComplete(Future { scoreJsonRequest(DataInputFormat.read(json)) }) {
+                onComplete(Future {
+                  scoreJsonRequest(DataInputFormat.read(json))
+                }) {
                   case Success(output) => complete(DataOutputFormat.write(output).toString())
                   case Failure(ex) => ctx => {
                     ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
@@ -116,7 +123,9 @@ class ScoringService(model: Model) extends Directives {
               val splitSegment = decoded.split(",")
               records = records :+ splitSegment.asInstanceOf[Array[Any]]
             }
-            onComplete(Future { scoreStringRequest(records) }) {
+            onComplete(Future {
+              scoreStringRequest(records)
+            }) {
               case Success(string) => complete(string.mkString(","))
               case Failure(ex) => ctx => {
                 ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
@@ -129,14 +138,54 @@ class ScoringService(model: Model) extends Directives {
         requestUri { uri =>
           get {
             import spray.json._
-            onComplete(Future { model.modelMetadata() }) {
+            require(scoringModel != null, "Model is null. Please use the upload API to add the model to the Scoring Engine")
+            onComplete(Future {
+              scoringModel.modelMetadata()
+            }) {
               case Success(metadata) => complete(JsObject("model_details" -> metadata.toJson,
-                "input" -> new JsArray(model.input.map(input => FieldFormat.write(input)).toList),
-                "output" -> new JsArray(model.output.map(output => FieldFormat.write(output)).toList)).toString)
+                "input" -> new JsArray(scoringModel.input().map(input => FieldFormat.write(input)).toList),
+                "output" -> new JsArray(scoringModel.output().map(output => FieldFormat.write(output)).toList)).toString())
               case Failure(ex) => ctx => {
                 ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
 
               }
+            }
+          }
+        }
+      } ~
+      path("uploadMarFile") {
+        post {
+          var ret: Option[Route] = None
+          entity(as[MultipartFormData]) { formData =>
+            val file = formData.get("file")
+            for (fileBodypart: BodyPart <- file) {
+              val fileEntity: HttpEntity = fileBodypart.entity
+              val status = installModel(fileEntity.data.toByteArray)
+              if(status == "OK") {
+                ret = Some(complete("File was successfully uploaded and model created. \n"))
+              }
+              else {
+                ret = Some (complete("Model already installed in SE. App does not allow uploading another model. \n"))
+              }
+            }
+            ret.getOrElse(complete(StatusCodes.InternalServerError, "Unable to create the model"))
+          }
+        }
+      } ~
+      path("uploadMarBytes") {
+        requestUri { uri =>
+          post {
+            var ret: Option[Route] = None
+            entity(as[Array[Byte]]) { params =>
+              val status = installModel(params)
+              if (status == "OK") {
+                ret = Some(complete("Model Bytes were successfully uploaded and model created. \n"))
+              }
+              else {
+                ret = Some(complete("Model already installed in SE. App does not allow uploading another model. \n"))
+              }
+
+              ret.getOrElse(complete(StatusCodes.InternalServerError, "Unable to create the model"))
             }
           }
         }
@@ -145,20 +194,46 @@ class ScoringService(model: Model) extends Directives {
 
   def scoreStringRequest(records: Seq[Array[Any]]): Array[Any] = {
     records.map(row => {
-      val score = model.score(row)
+      require(scoringModel != null, "Model is null. Please use the upload API to add the model to the Scoring Engine")
+      val score = scoringModel.score(row)
       score(score.length - 1).toString
     }).toArray
   }
 
   def scoreJsonRequest(records: Seq[Array[Any]]): Array[Map[String, Any]] = {
-    records.map(row => scoreToMap(model.score(row))).toArray
+    records.map(row => {
+      require(scoringModel != null, "Model is null. Please use the upload API to add the model to the Scoring Engine")
+      scoreToMap(scoringModel.score(row))
+    }).toArray
   }
 
   def scoreToMap(score: Array[Any]): Map[String, Any] = {
-    val outputNames = model.output().map(o => o.name)
+    val outputNames = scoringModel.output().map(o => o.name)
     require(score.length == outputNames.length, "Length of output values should match the output names")
     val outputMap: Map[String, Any] = outputNames.zip(score).map(combined => (combined._1.name, combined._2)).toMap
     outputMap
+  }
+
+  /**
+   * Store the MAR file locally and load the model saved at the given path
+   * @return String indicating if the model was successfully uploaded ('OK') OR model upload was not attempted since SE already contained a model ('Fail')
+   */
+  private def installModel(modelBytes: Array[Byte]): String = {
+    if (scoringModel == null) {
+      var tempMarFile: File = null
+      try {
+        tempMarFile = File.createTempFile("model", ".mar")
+        FileUtils.writeByteArrayToFile(tempMarFile, modelBytes)
+        scoringModel = ModelArchiveFormat.read(tempMarFile, this.getClass.getClassLoader, None)
+        "OK"
+      }
+      finally {
+        sys.addShutdownHook(FileUtils.deleteQuietly(tempMarFile)) // Delete temporary File on exit
+      }
+    }
+    else{
+      "Fail"
+    }
   }
 }
 

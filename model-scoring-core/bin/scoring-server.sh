@@ -32,11 +32,11 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MODEL_TMP_DIR
 MODEL_SCORING_MAIN="org.trustedanalytics.scoring.MyMainFunction"
 
 
-MODEL_SCORING_JAR=$(find `pwd` -name model-scoring-1.0-SNAPSHOT.jar)
+MODEL_SCORING_JAR=$(find `pwd` -name model-scoring-core-1.0-SNAPSHOT.jar)
 echo $MODEL_SCORING_JAR
 
 if [ -z $CP ]; then
-    CP=$DIR/../target/model-scoring-1.0-SNAPSHOT.jar:$DIR/../target/lib/*:/etc/hadoop/conf
+    CP=$DIR/../target/model-scoring-core-1.0-SNAPSHOT.jar:$DIR/../target/lib/*:/etc/hadoop/conf
 fi
 
 # NOTE: Add this parameter to Java for connecting to a debugger

@@ -24,7 +24,7 @@ import org.trustedanalytics.scoring.interfaces.{ Model, Field, ModelMetaData }
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-class ScoringServiceJsonProtocol(model: Model) {
+class ScoringServiceJsonProtocol() {
 
   implicit object ModelMetaDataFormat extends JsonFormat[ModelMetaData] {
     override def write(obj: ModelMetaData): JsValue = {
@@ -117,7 +117,6 @@ class ScoringServiceJsonProtocol(model: Model) {
   implicit object DataOutputFormat extends JsonFormat[Array[Map[String, Any]]] {
 
     override def write(obj: Array[Map[String, Any]]): JsValue = {
-      val modelMetadata = model.modelMetadata()
       JsObject("data" -> new JsArray(obj.map(output => DataTypeJsonFormat.write(output)).toList))
     }
 
@@ -135,33 +134,12 @@ class ScoringServiceJsonProtocol(model: Model) {
     }
     var features: Seq[Array[Any]] = Seq[Array[Any]]()
     decodedRecords.foreach(decodedRecord => {
-      val obsColumns = model.input()
-      val featureArray = new Array[Any](obsColumns.length)
-      if (decodedRecord.size != featureArray.length) {
-        throw new IllegalArgumentException(
-          "Size of input record is not equal to number of observation columns that model was trained on:\n" +
-            s"""Expected columns are: [${obsColumns.mkString(",")}]"""
-        )
-      }
+      val featureArray = new Array[Any](decodedRecord.size)
+      var counter = 0
       decodedRecord.foreach({
         case (name, value) => {
-          var counter = 0
-          var found = false
-          while (counter < obsColumns.length && !found) {
-            if (obsColumns(counter).name != name) {
-              counter = counter + 1
-            }
-            else {
-              featureArray(counter) = value
-              found = true
-            }
-          }
-          if (!found) {
-            throw new IllegalArgumentException(
-              s"""$name was not found in list of Observation Columns that model was trained on: [${obsColumns.mkString(",")}]"""
-            )
-          }
-
+          featureArray(counter) = value
+          counter = counter + 1
         }
       })
       features = features :+ featureArray
