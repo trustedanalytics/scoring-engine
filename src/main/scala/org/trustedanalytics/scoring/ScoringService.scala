@@ -24,9 +24,12 @@ import akka.event.Logging
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 import org.trustedanalytics.scoring.interfaces.Model
 import spray.json._
+import DefaultJsonProtocol._
+import org.trustedanalytics.scoring.ScoringServiceJsonProtocol._
+
 
 /**
  * We don't implement our route structure directly in the service actor because
@@ -54,18 +57,7 @@ class ScoringServiceActor(val scoringService: ScoringService) extends Actor with
 /**
  * Defines our service behavior independently from the service actor
  */
-class ScoringService(model: Model) extends Directives {
-  def homepage = {
-    respondWithMediaType(`text/html`) {
-      complete {
-        <html>
-          <body>
-            <h1>Welcome to the New Scoring Engine</h1>
-          </body>
-        </html>
-      }
-    }
-  }
+class ScoringService(scoringModel: Model) extends Directives {
 
   lazy val description = {
     new ServiceDescription(name = "Trusted Analytics",
@@ -73,10 +65,13 @@ class ScoringService(model: Model) extends Directives {
       versions = List("v1", "v2"))
   }
 
-  val jsonFormat = new ScoringServiceJsonProtocol(model)
-  import jsonFormat._
-
   import spray.json._
+
+  case class ModelData(model: Model, jsonFormat: DataOutputFormatJsonProtocol)
+
+  var modelData = ModelData(scoringModel,
+    new DataOutputFormatJsonProtocol(scoringModel))
+
 
   /**
    * Main Route entry point to the Scoring Server
@@ -86,7 +81,11 @@ class ScoringService(model: Model) extends Directives {
     val metadataPrefix = "metadata"
     path("") {
       get {
-        homepage
+        respondWithMediaType(`text/html`) {
+          complete(
+            getHomePage(modelData)
+          )
+        }
       }
     } ~
       path("v2" / prefix) {
@@ -95,13 +94,7 @@ class ScoringService(model: Model) extends Directives {
             entity(as[String]) {
               scoreArgs =>
                 val json: JsValue = scoreArgs.parseJson
-                import jsonFormat.DataOutputFormat
-                onComplete(Future { scoreJsonRequest(DataInputFormat.read(json)) }) {
-                  case Success(output) => complete(DataOutputFormat.write(output).toString())
-                  case Failure(ex) => ctx => {
-                    ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
-                  }
-                }
+                getScore(modelData, json)
             }
           }
         }
@@ -116,49 +109,138 @@ class ScoringService(model: Model) extends Directives {
               val splitSegment = decoded.split(",")
               records = records :+ splitSegment.asInstanceOf[Array[Any]]
             }
-            onComplete(Future { scoreStringRequest(records) }) {
-              case Success(string) => complete(string.mkString(","))
-              case Failure(ex) => ctx => {
-                ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
-              }
-            }
+            getScoreV1(modelData, records)
           }
         }
       } ~
       path("v2" / metadataPrefix) {
         requestUri { uri =>
           get {
-            import spray.json._
-            onComplete(Future { model.modelMetadata() }) {
-              case Success(metadata) => complete(JsObject("model_details" -> metadata.toJson,
-                "input" -> new JsArray(model.input.map(input => FieldFormat.write(input)).toList),
-                "output" -> new JsArray(model.output.map(output => FieldFormat.write(output)).toList)).toString)
-              case Failure(ex) => ctx => {
-                ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
-
-              }
+            getMetaData(modelData)
+          }
+        }
+      }~
+      path("v2" / "revise") {
+        requestUri { uri =>
+          post {
+            entity(as[String]) {
+              args =>
+                this.synchronized {
+                  val path = if (args.parseJson.asJsObject.getFields("model-path").size == 1) {
+                    args.parseJson.asJsObject.getFields("model-path")(0).convertTo[String]
+                  }
+                  else {
+                    null
+                  }
+                  println("--------------> MODEL-PATH: "+path)
+                  //if request data contains "force = true" , then force switch should be true, else false
+                  val force = if (args.parseJson.asJsObject.getFields("force").size == 1) {
+                    if (args.parseJson.asJsObject.getFields("force")(0).convertTo[String].toLowerCase == "true") true else false
+                  }
+                  else {
+                    false
+                  }
+                  println("--------------> FORCE: "+force)
+                  reviseModelData(modelData, path, force)
+                }
             }
           }
         }
       }
   }
 
-  def scoreStringRequest(records: Seq[Array[Any]]): Array[Any] = {
+  def scoreStringRequest(modelData: ModelData, records: Seq[Array[Any]]): Array[Any] = {
     records.map(row => {
-      val score = model.score(row)
+      val score = modelData.model.score(row)
       score(score.length - 1).toString
     }).toArray
   }
 
-  def scoreJsonRequest(records: Seq[Array[Any]]): Array[Map[String, Any]] = {
-    records.map(row => scoreToMap(model.score(row))).toArray
+  def scoreJsonRequest(modeldata: ModelData, json: JsValue): Array[Map[String, Any]] = {
+    val records = modeldata.jsonFormat.DataInputFormat.read(json)
+    records.map(row => scoreToMap(modeldata.model, modeldata.model.score(row))).toArray
   }
 
-  def scoreToMap(score: Array[Any]): Map[String, Any] = {
+  def scoreToMap(model: Model, score: Array[Any]): Map[String, Any] = {
     val outputNames = model.output().map(o => o.name)
     require(score.length == outputNames.length, "Length of output values should match the output names")
     val outputMap: Map[String, Any] = outputNames.zip(score).map(combined => (combined._1.name, combined._2)).toMap
     outputMap
+  }
+
+  private def getScore(md: ModelData, json: JsValue): Route = {
+    onComplete(Future { scoreJsonRequest(md, json) }) {
+      case Success(output) => complete(md.jsonFormat.DataOutputFormat.write(output).toString())
+      case Failure(ex) => ctx => {
+        ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
+      }
+    }
+  }
+
+  private def getScoreV1(md: ModelData, records: Seq[Array[Any]]): Route = {
+    onComplete(Future { scoreStringRequest(md, records) }) {
+      case Success(string) => complete(string.mkString(","))
+      case Failure(ex) => ctx => {
+        ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
+      }
+    }
+  }
+
+  private def getMetaData(md: ModelData): Route = {
+    import spray.json._
+    onComplete(Future { md.model.modelMetadata() }) {
+      case Success(metadata) => complete(JsObject("model_details" -> metadata.toJson,
+        "input" -> new JsArray(md.model.input.map(input => FieldFormat.write(input)).toList),
+        "output" -> new JsArray(md.model.output.map(output => FieldFormat.write(output)).toList)).toString())
+      case Failure(ex) => ctx => {
+        ctx.complete(StatusCodes.InternalServerError, ex.getMessage)
+      }
+    }
+  }
+  private def reviseModelData(md: ModelData, modelPath: String, force: Boolean = false): Route = {
+    if (modelPath == null) {
+      complete(StatusCodes.BadRequest, "'model-path' is not present in request!")
+    }
+    else {
+      try {
+        val revisedModel = ScoringEngineHelper.getModel(modelPath)
+        if (force || ScoringEngineHelper.isModelCompatible(modelData.model, revisedModel)) {
+          println("-----------------> INSIDE SUCCESS")
+          modelData = ModelData(revisedModel, new DataOutputFormatJsonProtocol(revisedModel))
+          complete { """{"status": "success"}""" }
+        }
+        else {
+          complete(StatusCodes.BadRequest, "Revised Model type or input-output parameters names are " +
+            "different than existing model")
+        }
+      }
+      catch {
+        case e: Throwable =>
+          modelData = md
+          e.printStackTrace()
+          if (e.getMessage.contains("File does not exist:")) {
+            complete(StatusCodes.BadRequest, e.getMessage)
+          }
+          else {
+            complete(StatusCodes.InternalServerError, e.getMessage)
+          }
+      }
+    }
+  }
+
+  private def getHomePage(md: ModelData): String = {
+    val metadata = JsObject("model_details" -> md.model.modelMetadata().toJson,
+      "input" -> new JsArray(md.model.input.map(input => FieldFormat.write(input)).toList),
+      "output" -> new JsArray(md.model.output.map(output => FieldFormat.write(output)).toList)).prettyPrint
+
+    s"""
+      <html>
+        <body>
+          <h1>Welcome to the Scoring Engine</h1>
+          <h3>Model details:</h3>
+          Model metadata:<pre> $metadata </pre>
+        </body>
+      </html>"""
   }
 }
 
