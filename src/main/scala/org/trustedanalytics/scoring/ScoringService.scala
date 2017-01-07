@@ -132,7 +132,6 @@ class ScoringService(scoringModel: Model) extends Directives {
                   else {
                     null
                   }
-                  println("--------------> MODEL-PATH: "+path)
                   //if request data contains "force = true" , then force switch should be true, else false
                   val force = if (args.parseJson.asJsObject.getFields("force").size == 1) {
                     if (args.parseJson.asJsObject.getFields("force")(0).convertTo[String].toLowerCase == "true") true else false
@@ -140,7 +139,6 @@ class ScoringService(scoringModel: Model) extends Directives {
                   else {
                     false
                   }
-                  println("--------------> FORCE: "+force)
                   reviseModelData(modelData, path, force)
                 }
             }
@@ -205,7 +203,6 @@ class ScoringService(scoringModel: Model) extends Directives {
       try {
         val revisedModel = ScoringEngineHelper.getModel(modelPath)
         if (force || ScoringEngineHelper.isModelCompatible(modelData.model, revisedModel)) {
-          println("-----------------> INSIDE SUCCESS")
           modelData = ModelData(revisedModel, new DataOutputFormatJsonProtocol(revisedModel))
           complete { """{"status": "success"}""" }
         }
