@@ -15,10 +15,10 @@
  */
 package org.trustedanalytics
 
-import org.trustedanalytics.scoring.ScoringServiceJsonProtocol
-import org.scalatest.{ Matchers, WordSpec }
+import org.trustedanalytics.scoring.{DataOutputFormatJsonProtocol, ScoringServiceJsonProtocol}
+import org.scalatest.{Matchers, WordSpec}
 import spray.json._
-import org.trustedanalytics.scoring.interfaces.{ ModelMetaData, Field, Model }
+import org.trustedanalytics.scoring.interfaces.{Field, Model, ModelMetaData}
 
 import scala.collection.immutable.Map
 
@@ -39,7 +39,7 @@ class ScoringServiceJsonProtocolTest extends WordSpec with Matchers {
     override def score(row: Array[Any]): Array[Any] = ???
   }
 
-  val jsonFormat = new ScoringServiceJsonProtocol(model)
+  val jsonFormat = new DataOutputFormatJsonProtocol(model)
 
   import jsonFormat.DataInputFormat
   import jsonFormat.DataOutputFormat
