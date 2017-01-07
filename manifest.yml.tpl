@@ -11,4 +11,4 @@ applications:
     - hdfs-for-se-sparktk
     - kerberos-for-atk
   env:
-    VERSION: "20170103"
+    VERSION: "20170107"
