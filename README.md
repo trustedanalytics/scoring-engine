@@ -27,4 +27,4 @@ You can create a scoring engine instance from the TAP Console, as follows:
 
 >This may take a minute or two.  
 
-When done, you can see your scoring engine listed the **Applications** page.  
+When done, you can see your scoring engine listed on the **Applications** page.  
