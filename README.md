@@ -7,7 +7,7 @@ The Scoring Engine is a REST server capable of loading trained machine learning 
 If you need to perform transformations on the incoming data you wish to score, use the scoring-pipelines instead of the scoring-engine. The scoring-pipelines perform supported data transformations and automatically submit the output to the scoring engine. The repo for the scoring-pipelines is https://github.com/trustedanalytics/scoring-pipelines.
 
 
-#Scoring Engine support for revised models
+##Scoring Engine support for revised models
 
 The Scoring Engine allows a revised model of the same type and using the same I/O parameters to be seamlessly updated, without needing to redeploy the Scoring Engine. It also supports forcing the use of a revised model that may be incompatible with the previous revision. Details are [provided below] (https://github.com/trustedanalytics/scoring-engine#model-revision).
 
