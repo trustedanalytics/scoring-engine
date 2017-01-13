@@ -7,6 +7,11 @@ The Scoring Engine is a REST server capable of loading trained machine learning 
 If you need to perform transformations on the incoming data you wish to score, use the scoring-pipelines instead of the scoring-engine. The scoring-pipelines perform supported data transformations and automatically submit the output to the scoring engine. The repo for the scoring-pipelines is https://github.com/trustedanalytics/scoring-pipelines.
 
 
+#Scoring Engine support for revised models
+
+The Scoring Engine allows a revised model of the same type and using the same I/O parameters to be seamlessly updated, without needing to redeploy the Scoring Engine. It also supports forcing the use of a revised model that may be incompatible with the previous revision. Details are [provided below] (https://github.com/trustedanalytics/scoring-engine#model-revision).
+
+
 #Creating a scoring engine instance
 
 >These steps assume you already have a model in MAR format and have the URI to that model.  
@@ -103,3 +108,25 @@ The trained model can also be exported to a .mar file, to be used with the scori
 >>> canonical_path = model.export_to_mar("sandbox/rfClassifier.mar")
 ```  
 
+<a name=”model-revision”>
+#Model revision support
+You can deploy models of the same type (Linear Regression, Random Forest, K-means, etc.) *and* using the same I/O parameters as the original model *without* having to redeploy a scoring engine. This allows you to focus more on analysis and less on process.
+
+##Examples:  
+Revising a model of the same type and with same I/O parameters: 
+
+```
+curl -X POST -d '{"model-path": "/path/to/model.mar"}' http://localhost:9100/v2/revise 
+```
+
+>If a revised model request comes while batch scoring is in process, the entire in-process batch is scored using the existing model. Then the revised model will be installed, and all following requests will use the revised model.  
+  
+  
+>You can see the metadata for the model being used when you view the scoring engine in your browser.
+  
+
+Forcefully revising incompatible model:  
+  
+```
+curl -X POST -d '{"model-path": "/path/to/model.mar", “force”: “true”}' http://localhost:9100/v2/revise
+```
