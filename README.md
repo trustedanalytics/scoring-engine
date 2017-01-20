@@ -108,7 +108,7 @@ The trained model can also be exported to a .mar file, to be used with the scori
 >>> canonical_path = model.export_to_mar("sandbox/rfClassifier.mar")
 ```  
 
-<a name=model-revision>
+<a name="model-revision">
 #Model revision support
 You can deploy models of the same type (Linear Regression, Random Forest, K-means, etc.) *and* using the same I/O parameters as the original model *without* having to redeploy a scoring engine. This allows you to focus more on analysis and less on process.
 
@@ -116,10 +116,13 @@ You can deploy models of the same type (Linear Regression, Random Forest, K-mean
 Revising a model of the same type and with same I/O parameters: 
 
 * revise model via .mar file
+
 	```
 	curl -i -X POST  -F file=@revised_model.mar http://localhost:9100/v2/reviseMarFile
 	```
+
 * revise model via byte stream of model file 
+
 	```
 	modelBytes = open('./revised_model.mar', 'rb').read()
 	requests.post(url='http://localhost:9100/v2/reviseMarBytes', data=modelBytes, headers={'Content-Type': 'application/octet-stream'})
@@ -128,10 +131,13 @@ Revising a model of the same type and with same I/O parameters:
 Forcefully revising incompatible model:  
 
 * forcefully revise model via .mar file
+
 	```
 	curl -i -X POST  -F file=@revised_model.mar "http://localhost:9100/v2/forceReviseMarFile"
 	```
+
 * forcefully revising model via byte stream of model file 
+
 	```
 	modelBytes = open('./revised_model.mar', 'rb').read()
 	requests.post(url='http://localhost:9100/v2/forceReviseMarBytes', data=modelBytes, headers={'Content-Type': 'application/octet-stream'})
