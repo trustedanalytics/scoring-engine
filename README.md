@@ -112,14 +112,15 @@ The trained model can also be exported to a .mar file, to be used with the scori
 #Model revision support
 You can deploy models of the same type (Linear Regression, Random Forest, K-means, etc.) *and* using the same I/O parameters as the original model *without* having to redeploy a scoring engine. This allows you to focus more on analysis and less on process.
 
-##Examples:  
+##Examples (python):  
 Revising a model of the same type and with same I/O parameters: 
 
-* revise model via .mar file
+* revise model via .mar file 
 
 	```
-	curl -i -X POST  -F file=@revised_model.mar http://localhost:9100/v2/reviseMarFile
-	```
+    files = {'file': open('/path/to/revised_model.mar', 'rb')}
+    requests.post(url='http://localhost:9100/forceReviseMarFile', files=files)
+    ```
 
 * revise model via byte stream of model file 
 
@@ -128,13 +129,14 @@ Revising a model of the same type and with same I/O parameters:
 	requests.post(url='http://localhost:9100/v2/reviseMarBytes', data=modelBytes, headers={'Content-Type': 'application/octet-stream'})
 	```
 
-Forcefully revising incompatible model:  
+Forcefully revising incompatible model i.e revised model has different input and/or output paramaeters and different model type that existing model in scoring engine:  
 
 * forcefully revise model via .mar file
 
 	```
-	curl -i -X POST  -F file=@revised_model.mar "http://localhost:9100/v2/forceReviseMarFile"
-	```
+    files = {'file': open('/path/to/revised_model.mar', 'rb')}
+    requests.post(url='http://localhost:9100/v2/forceReviseMarFile', files=files)
+    ```
 
 * forcefully revising model via byte stream of model file 
 
