@@ -108,16 +108,43 @@ The trained model can also be exported to a .mar file, to be used with the scori
 >>> canonical_path = model.export_to_mar("sandbox/rfClassifier.mar")
 ```  
 
-<a name=”model-revision”>
+<a name="model-revision">
 #Model revision support
 You can deploy models of the same type (Linear Regression, Random Forest, K-means, etc.) *and* using the same I/O parameters as the original model *without* having to redeploy a scoring engine. This allows you to focus more on analysis and less on process.
 
-##Examples:  
+##Examples (python):  
 Revising a model of the same type and with same I/O parameters: 
 
-```
-curl -X POST -d '{"model-path": "/path/to/model.mar"}' http://localhost:9100/v2/revise 
-```
+* revise model via .mar file 
+
+	```
+    files = {'file': open('/path/to/revised_model.mar', 'rb')}
+    requests.post(url='http://localhost:9100/forceReviseMarFile', files=files)
+    ```
+
+* revise model via byte stream of model file 
+
+	```
+	modelBytes = open('./revised_model.mar', 'rb').read()
+	requests.post(url='http://localhost:9100/v2/reviseMarBytes', data=modelBytes, headers={'Content-Type': 'application/octet-stream'})
+	```
+
+Forcefully revising incompatible model i.e revised model has different input and/or output paramaeters and different model type that existing model in scoring engine:  
+
+* forcefully revise model via .mar file
+
+	```
+    files = {'file': open('/path/to/revised_model.mar', 'rb')}
+    requests.post(url='http://localhost:9100/v2/forceReviseMarFile', files=files)
+    ```
+
+* forcefully revising model via byte stream of model file 
+
+	```
+	modelBytes = open('./revised_model.mar', 'rb').read()
+	requests.post(url='http://localhost:9100/v2/forceReviseMarBytes', data=modelBytes, headers={'Content-Type': 'application/octet-stream'})
+	```
+
 
 >If a revised model request comes while batch scoring is in process, the entire in-process batch is scored using the existing model. Then the revised model will be installed, and all following requests will use the revised model.  
   
@@ -125,8 +152,4 @@ curl -X POST -d '{"model-path": "/path/to/model.mar"}' http://localhost:9100/v2/
 >You can see the metadata for the model being used when you view the scoring engine in your browser.
   
 
-Forcefully revising incompatible model:  
-  
-```
-curl -X POST -d '{"model-path": "/path/to/model.mar", “force”: “true”}' http://localhost:9100/v2/revise
-```
+ 

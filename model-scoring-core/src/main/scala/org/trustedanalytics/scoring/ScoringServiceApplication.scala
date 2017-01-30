@@ -15,35 +15,18 @@
  */
 package org.trustedanalytics.scoring
 
-import java.io.{ FileOutputStream, File, FileInputStream }
+import java.util.{ArrayList => JArrayList}
 
-import akka.actor.{ ActorSystem, Props }
+import akka.actor.{ActorSystem, Props}
 import akka.io.IO
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{ FileSystem, Path }
-import org.trustedanalytics.hadoop.config.client.oauth.TapOauthToken
-import spray.can.Http
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.concurrent.duration._
-import com.typesafe.config.{ Config, ConfigFactory }
-import scala.reflect.ClassTag
-import org.trustedanalytics.scoring.interfaces.Model
-import org.trustedanalytics.hadoop.config.client.helper.Hdfs
-import java.net.URI
-import org.apache.commons.io.FileUtils
-
-import org.apache.http.message.BasicNameValuePair
-import org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
-import org.apache.http.impl.client.{ BasicCredentialsProvider, HttpClientBuilder }
-import org.apache.http.client.methods.{ HttpPost, CloseableHttpResponse }
-import org.apache.http.HttpHost
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.client.entity.UrlEncodedFormEntity
-import java.util.{ ArrayList => JArrayList }
-import spray.json._
-import org.trustedanalytics.model.archive.format.ModelArchiveFormat
+import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
+import org.trustedanalytics.scoring.interfaces.Model
+import spray.can.Http
+
+import scala.concurrent.duration._
 
 /**
  * Scoring Service Application - a REST application used by client layer to communicate with the Model.
@@ -75,13 +58,7 @@ class ScoringServiceApplication {
    */
   private def getModel: Model = {
     val marFilePath = config.getString("trustedanalytics.scoring-engine.archive-mar")
-    if (marFilePath != "") {
-      logger.info("calling ModelArchiveFormat to get the model")
-      ModelArchiveFormat.read(new File(marFilePath), this.getClass.getClassLoader, None)
-    }
-    else {
-      null
-    }
+    ScoringEngineHelper.getModel(marFilePath)
   }
 
   /**

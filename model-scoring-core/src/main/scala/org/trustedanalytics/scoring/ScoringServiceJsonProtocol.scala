@@ -24,7 +24,7 @@ import org.trustedanalytics.scoring.interfaces.{ Model, Field, ModelMetaData }
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-class ScoringServiceJsonProtocol() {
+object ScoringServiceJsonProtocol {
 
   implicit object ModelMetaDataFormat extends JsonFormat[ModelMetaData] {
     override def write(obj: ModelMetaData): JsValue = {
@@ -54,20 +54,6 @@ class ScoringServiceJsonProtocol() {
     }
   }
 
-  implicit object DataInputFormat extends JsonFormat[Seq[Array[Any]]] {
-
-    //don't need this method. just there to satisfy the API.
-    override def write(obj: Seq[Array[Any]]): JsValue = ???
-
-    override def read(json: JsValue): Seq[Array[Any]] = {
-      val records = json.asJsObject.getFields("records") match {
-        case Seq(JsArray(records)) => records
-        case x => deserializationError(s"Expected array of records but got $x")
-      }
-      decodeRecords(records)
-    }
-  }
-
   implicit object DataTypeJsonFormat extends JsonFormat[Any] {
     override def write(obj: Any): JsValue = {
       obj match {
@@ -78,11 +64,11 @@ class ScoringServiceJsonProtocol() {
         case s: String => new JsString(s)
         case s: Boolean => JsBoolean(s)
         case dt: DateTime => JsString(org.joda.time.format.ISODateTimeFormat.dateTime.print(dt))
-        case m: Map[_, _] @unchecked => mapToJson(m)
+        case m: Map[_, _]@unchecked => mapToJson(m)
         case v: List[_] => listToJson(v)
         case v: Array[_] => listToJson(v.toList)
         case v: Vector[_] => listToJson(v.toList)
-        case v: ArrayBuffer[_] @unchecked => listToJson(v.toList)
+        case v: ArrayBuffer[_]@unchecked => listToJson(v.toList)
         case n: java.lang.Long => new JsNumber(n.longValue())
         // case null => JsNull  Consciously not writing nulls, may need to change, but for now it may catch bugs
         case unk =>
@@ -112,53 +98,9 @@ class ScoringServiceJsonProtocol() {
         case unk => deserializationError("Cannot deserialize " + unk.getClass.getName)
       }
     }
+
   }
 
-  implicit object DataOutputFormat extends JsonFormat[Array[Map[String, Any]]] {
-
-    override def write(obj: Array[Map[String, Any]]): JsValue = {
-      JsObject("data" -> new JsArray(obj.map(output => DataTypeJsonFormat.write(output)).toList))
-    }
-
-    //don't need this method. just there to satisfy the API.
-    override def read(json: JsValue): Array[Map[String, Any]] = ???
-  }
-
-  def decodeRecords(records: List[JsValue]): Seq[Array[Any]] = {
-    val decodedRecords: Seq[Map[String, Any]] = records.map { record =>
-      record match {
-        case JsObject(fields) =>
-          val decodedRecord: Map[String, Any] = for ((feature, value) <- fields) yield (feature, decodeJValue(value))
-          decodedRecord
-      }
-    }
-    var features: Seq[Array[Any]] = Seq[Array[Any]]()
-    decodedRecords.foreach(decodedRecord => {
-      val featureArray = new Array[Any](decodedRecord.size)
-      var counter = 0
-      decodedRecord.foreach({
-        case (name, value) => {
-          featureArray(counter) = value
-          counter = counter + 1
-        }
-      })
-      features = features :+ featureArray
-    })
-    features
-  }
-
-  def decodeJValue(v: JsValue): Any = {
-    v match {
-      case JsString(s) => s
-      case JsNumber(n) => n.toDouble
-      case JsArray(items) => for (item <- items) yield decodeJValue(item)
-      case JsNull => null
-      case JsObject(fields) =>
-        val decodedValue: Map[String, Any] = for ((feature, value) <- fields) yield (feature, decodeJValue(value))
-        decodedValue
-      case x => deserializationError(s"Unexpected JSON type in record $x")
-    }
-  }
 
   private def mapToJson[K <: Any, V <: Any](m: Map[K, V]): JsObject = {
     require(m != null, s"Scoring service cannot serialize null to JSON")
@@ -194,5 +136,6 @@ class ScoringServiceJsonProtocol() {
     }
     new JsArray(jsElements)
   }
+
 }
 
