@@ -15,10 +15,10 @@
 #  limitations under the License.
 #
 
-#set -o errexit
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 pushd $DIR/..
+
 pwd
 
 export HOSTNAME=`hostname`

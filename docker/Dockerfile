@@ -9,6 +9,8 @@ USER modelscoring
 WORKDIR /home/modelscoring/
 ADD $MODEL_SCORING_PACKAGE .
 
+EXPOSE 9100
+
 WORKDIR /home/modelscoring/
 ENTRYPOINT [ "bin/model-scoring.sh" ]
 

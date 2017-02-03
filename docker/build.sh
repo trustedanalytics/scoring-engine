@@ -37,7 +37,7 @@ echo Base name $NAME
 NAME=${NAME//.zip/}
 echo Base name $NAME
 
-echo docker build --file=Dockerfile --tag=scoring-engine   \
+echo docker build --file=Dockerfile --tag=scoring-engine-$BUILD_NUMBER   \
  --build-arg HTTP_PROXY=$http_proxy \
  --build-arg HTTPS_PROXY=$http_proxy \
  --build-arg NO_PROXY=$no_proxy \
@@ -46,7 +46,7 @@ echo docker build --file=Dockerfile --tag=scoring-engine   \
  --build-arg no_proxy=$no_proxy \
  --build-arg MODEL_SCORING_PACKAGE=$NAME \
  .
-docker build --file=Dockerfile --tag=scoring-engine   \
+docker build --file=Dockerfile --tag=scoring-engine-$BUILD_NUMBER   \
  --build-arg HTTP_PROXY=$http_proxy \
  --build-arg HTTPS_PROXY=$http_proxy \
  --build-arg NO_PROXY=$no_proxy \
@@ -56,3 +56,50 @@ docker build --file=Dockerfile --tag=scoring-engine   \
  --build-arg MODEL_SCORING_PACKAGE=$NAME \
  .
 
+mars=$(find `pwd`  -name "*.mar" -type f )
+IFS=$'\n'
+for mar in $mars
+do
+    echo
+    echo $mar
+    MARNAME="`basename $mar`"
+    echo Base name $MARNAME
+    MARNAME=${MARNAME//.mar/}
+    echo Base name $MARNAME
+    docker kill $MARNAME-$BUILD_NUMBER
+    docker rm $MARNAME-$BUILD_NUMBER
+done
+
+for mar in $mars
+do
+    echo
+    echo $mar
+    MARNAME="`basename $mar`"
+    echo Base name $MARNAME
+    MARNAME=${MARNAME//.mar/}
+    echo Base name $MARNAME
+    DOCKERCONT=$MARNAME-$BUILD_NUMBER
+    docker kill $DOCKERCONT
+    docker rm $DOCKERCONT
+    docker run -it -d -p 9100:9100 --name=$DOCKERCONT scoring-engine-$BUILD_NUMBER
+    MAX=20
+    code=$(curl -s -o /dev/null  localhost:9100 -w "%{http_code}")
+    count=$((0))
+    while [ $code -ne 200 ] && [ $count -lt $MAX ];
+    do
+        echo $code
+        code=$(curl -s -o /dev/null  localhost:9100 -w "%{http_code}")
+        count=$((0+1))
+        sleep 1
+    done
+    code=$(curl -F "file=@$mar" -s -o /dev/null  localhost:9100/uploadMarFile -w "%{http_code}")
+    if [ $code -ge 200 ] && [ $code -lt 400 ]; then
+        echo yes $code
+    else
+        echo failed to load model $mar, http status code $code
+        docker logs $DOCKERCONT
+        exit 1
+    fi
+    docker kill $DOCKERCONT
+    docker rm $DOCKERCONT
+done
