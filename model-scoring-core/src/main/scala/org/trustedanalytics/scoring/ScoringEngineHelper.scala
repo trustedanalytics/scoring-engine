@@ -41,11 +41,28 @@ object ScoringEngineHelper {
 
   def getModel(marFilePath: String): Model = {
     if (marFilePath != "") {
-      logger.info("calling ModelArchiveFormat to get the model")
-      ModelArchiveFormat.read(new File(marFilePath), this.getClass.getClassLoader, None)
-    }
-    else {
-      null
+      try {
+        logger.info("Calling ModelArchiveFormat.read() to load the model stored locally")
+        return ModelArchiveFormat.read(new File(marFilePath), this.getClass.getClassLoader, None)
+      } catch {
+        case e: Exception =>
+          try {
+            logger.info("Unale to load model from local filesystem, trying to load the model from HDFS")
+            tempMarFile = File.createTempFile("model", ".mar")
+            hdfsFileSystem.copyToLocalFile(false, new Path(marFilePath), new Path(tempMarFile.getAbsolutePath))
+            val hdfsMarFilePath = tempMarFile.getAbsolutePath
+            sys.addShutdownHook(FileUtils.deleteQuietly(tempMarFile)) // Delete temporary directory on exit
+            return ModelArchiveFormat.read(new File(hdfsMarFilePath), this.getClass.getClassLoader, None)
+          } catch {
+            case e: Exception =>
+              logger.info("Unale to load model from HDFS...")
+              return null
+          } finally {
+            FileUtils.deleteQuietly(tempMarFile)
+          }
+      }
+    } else {
+      return null
     }
   }
 }
