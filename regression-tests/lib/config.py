@@ -19,7 +19,7 @@
 import os
 
 
-root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 dataset_directory = os.path.join(root, "regression-tests", "datasets")
 hdfs_namenode = os.getenv("CDH_MASTER", "localhost")
 user = os.getenv("USER", "hadoop")
@@ -34,3 +34,4 @@ checkpoint_dir = hdfs_user_root + "/sparktk_checkpoint"
 export_dir = "hdfs://"+hostname+":8020"+hdfs_user_root+"/sparktk_export"
 
 scoring_engine_host = os.getenv("SCORING_ENGINE_HOST", "127.0.0.1")
+port = 8020
