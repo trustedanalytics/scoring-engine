@@ -1,18 +1,18 @@
-#Scoring Engine
+# Scoring Engine
 
 The Scoring Engine is a REST server capable of loading trained machine learning models exported by Spark-tk in MAR (Model ARchive) format and using the models to score streams of incoming data. These models implement Model ARchive Interface defined in the ModelArchiver repository at: https://github.com/trustedanalytics/ModelArchiver. Applications can use the Scoring Engine RESTful API to get predictions produced by a model.
 
-##scoring-pipelines vs. scoring-engine
+## scoring-pipelines vs. scoring-engine
 
 If you need to perform transformations on the incoming data you wish to score, use the scoring-pipelines instead of the scoring-engine. The scoring-pipelines perform supported data transformations and automatically submit the output to the scoring engine. The repo for the scoring-pipelines is https://github.com/trustedanalytics/scoring-pipelines.
 
 
-##Scoring Engine support for revised models
+## Scoring Engine support for revised models
 
 The Scoring Engine allows a revised model of the same type and using the same I/O parameters to be seamlessly updated, without needing to redeploy the Scoring Engine. It also supports forcing the use of a revised model that may be incompatible with the previous revision. Details are [provided below] (https://github.com/trustedanalytics/scoring-engine#model-revision).
 
 
-#Creating a scoring engine instance
+# Creating a scoring engine instance
 
 >These steps assume you already have a model in MAR format and have the URI to that model.  
 
@@ -34,7 +34,7 @@ You can create a scoring engine instance from the TAP Console, as follows:
 
 When done, you can see your scoring engine listed on the **Applications** page.  
 
-#Scoring Example  
+# Scoring Example  
 
 The sample below is a Python script to send requests to the scoring engine containing a trained Random Forest Classifier model:  
 
@@ -150,6 +150,3 @@ Forcefully revising incompatible model i.e revised model has different input and
   
   
 >You can see the metadata for the model being used when you view the scoring engine in your browser.
-  
-
- 
